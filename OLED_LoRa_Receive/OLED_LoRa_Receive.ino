@@ -1,16 +1,15 @@
 #include <SPI.h>
-#include <LoRa.h>
+#include <LoRa.h> // https://github.com/sandeepmistry/arduino-LoRa
 #include <Wire.h>  
 #include "SSD1306.h" 
-#include "images.h"
 
 #define SCK     5    // GPIO5  -- SX1278's SCK
 #define MISO    19   // GPIO19 -- SX1278's MISO
 #define MOSI    27   // GPIO27 -- SX1278's MOSI
 #define SS      18   // GPIO18 -- SX1278's CS
-#define RST     14   // GPIO14 -- SX1278's RESET
+#define RST     12   // UNUSED
 #define DI0     26   // GPIO26 -- SX1278's IRQ(Interrupt Request)
-#define BAND    868E6
+#define BAND    433E6
 
 SSD1306 display(0x3c, 21, 22);
 String rssi = "RSSI --";
@@ -22,11 +21,12 @@ void loraData(){
   display.clear();
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setFont(ArialMT_Plain_10);
-  display.drawString(0 , 15 , "Received "+ packSize + " bytes");
-  display.drawStringMaxWidth(0 , 26 , 128, packet);
-  display.drawString(0, 0, rssi); 
+  display.drawString(0, 0, rssi + "; " + packSize + " bytes");
+  display.drawStringMaxWidth(0 , 15, 256, packet);
   display.display();
+  Serial.println(packet);
   Serial.println(rssi);
+  Serial.println();
 }
 
 void cbk(int packetSize) {
@@ -49,7 +49,7 @@ void setup() {
   Serial.println("LoRa Receiver Callback");
   SPI.begin(SCK,MISO,MOSI,SS);
   LoRa.setPins(SS,RST,DI0);  
-  if (!LoRa.begin(868E6)) {
+  if (!LoRa.begin(BAND)) {
     Serial.println("Starting LoRa failed!");
     while (1);
   }
@@ -59,7 +59,10 @@ void setup() {
   display.init();
   display.flipScreenVertically();  
   display.setFont(ArialMT_Plain_10);
-   
+
+  display.drawString(0, 0, "Ready");
+  display.display();
+
   delay(1500);
 }
 
